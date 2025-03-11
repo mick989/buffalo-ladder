@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เกมบันไดงู</title>
+    <style>
+        body { text-align: center; font-family: Arial, sans-serif; }
+        canvas { background-color: #eee; border: 2px solid black; }
+        #rollDice { font-size: 20px; padding: 10px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>เกมบันไดควาย</h1>
+    <canvas id="gameBoard" width="400" height="400"></canvas>
+    <br>
+    <button id="rollDice">ทอยลูกเต๋า</button>
+    <p id="status">กดทอยดิไอควายมันจะได้เริ่ม</p>
+    
+    <script>
+        const canvas = document.getElementById("gameBoard");
+        const ctx = canvas.getContext("2d");
+        const rollButton = document.getElementById("rollDice");
+        const statusText = document.getElementById("status");
+        
+        const boardSize = 10;
+        const cellSize = canvas.width / boardSize;
+        let playerPosition = 1;
+        
+        const ladders = { 3: 22, 5: 8, 11: 26, 20: 29, 17: 4, 32: 48, 43: 62, 50: 67, 70: 89, 77: 97 }; 
+        const snakes = { 27: 5, 35: 17, 54: 34, 62: 18, 75: 47, 87: 24, 94: 71, 99: 78 };
+        
+        function drawBoard() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.font = "14px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            for (let i = 0; i < boardSize; i++) {
+                for (let j = 0; j < boardSize; j++) {
+                    let number = boardSize * (boardSize - i - 1) + (j + 1);
+                    ctx.strokeRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                    ctx.fillText(number, j * cellSize + cellSize / 2, i * cellSize + cellSize / 2);
+                }
+            }
+            drawLadders();
+            drawSnakes();
+            drawPlayer();
+        }
+        
+        function drawLadders() {
+            ctx.strokeStyle = "green";
+            ctx.lineWidth = 4;
+            for (let start in ladders) {
+                let end = ladders[start];
+                drawLine(start, end);
+            }
+        }
+        
+        function drawSnakes() {
+            ctx.strokeStyle = "red";
+            ctx.lineWidth = 4;
+            for (let start in snakes) {
+                let end = snakes[start];
+                drawLine(start, end);
+            }
+        }
+        
+        function drawLine(start, end) {
+            let startCoords = getCoordinates(start);
+            let endCoords = getCoordinates(end);
+            ctx.beginPath();
+            ctx.moveTo(startCoords.x, startCoords.y);
+            ctx.lineTo(endCoords.x, endCoords.y);
+            ctx.stroke();
+        }
+        
+        function getCoordinates(position) {
+            let row = Math.floor((position - 1) / boardSize);
+            let col = (position - 1) % boardSize;
+            return {
+                x: col * cellSize + cellSize / 2,
+                y: (boardSize - row - 1) * cellSize + cellSize / 2
+            };
+        }
+        
+        function drawPlayer() {
+            let coords = getCoordinates(playerPosition);
+            ctx.fillStyle = "blue";
+            ctx.beginPath();
+            ctx.arc(coords.x, coords.y, 15, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        function rollDice() {
+            const diceRoll = Math.floor(Math.random() * 6) + 1;
+            let newPosition = playerPosition + diceRoll;
+            if (newPosition > 100) return;
+            statusText.innerText = `ทอยได้ ${diceRoll} ก้าว 
+            ไปที่ตำแหน่ง ${newPosition}`;
+            if (ladders.hasOwnProperty(newPosition)) {
+                statusText.innerText += ` แต่เจอบันได! 
+                ขึ้นไปตำแหน่งที่ ${ladders[newPosition]} ดวงชิบหาย`;
+                newPosition = ladders[newPosition];
+            }
+            if (snakes.hasOwnProperty(newPosition)) {
+                statusText.innerText += ` แต่เจองู! 
+                ตกลงไปตำแหน่งที่ ${snakes[newPosition]} โง่จัด555`;
+                newPosition = snakes[newPosition];
+            }
+            playerPosition = newPosition;
+            drawBoard();
+            if (playerPosition === 100) statusText.innerText = "กว่าจะชนะกูหลับไป10รอบอะ";
+        }
+        
+        rollButton.addEventListener("click", rollDice);
+        drawBoard();
+    </script>
+</body>
+</html>
